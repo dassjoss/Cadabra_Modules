@@ -1,6 +1,6 @@
 from cadabra2 import parent_rel_t
-from .get_full_index_name import get_full_index_name
-from .mutar_nodo_indice import mutar_nodo_indice
+from scripts.get_full_index_name import get_full_index_name
+from scripts.mutar_nodo_indice import mutar_nodo_indice
 
 
 def mutar_indice(expr, nombre_original, nombre_nuevo):
