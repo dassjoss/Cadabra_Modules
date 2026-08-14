@@ -2,7 +2,7 @@ from .get_full_index_name import get_full_index_name
 from .mutar_nodo_indice import mutar_nodo_indice
 from .mutar_indice import mutar_indice
 from .obtener_nodo_indice import obtener_nodo_indice
-from .obtener_indices_libres import obtener_indices_libres, fundamental
+from .obtener_indices_libres import obtener_indices_libres, fundamental, indices_producto
 from .derivadas import d_c_g
 
 __all__ = [
@@ -12,5 +12,6 @@ __all__ = [
     "obtener_nodo_indice",
     "obtener_indices_libres",
     "fundamental",
+    "indices_producto",
     "d_c_g",
 ]

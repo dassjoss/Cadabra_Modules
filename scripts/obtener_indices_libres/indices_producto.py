@@ -1,21 +1,24 @@
 def indices_producto(nodo, fundamental):
     """
-    Procesa un nodo que corresponde a un producto.
+    Procesa un nodo producto.
 
-    Recorre cada factor y utiliza fundamental()
-    para procesarlo recursivamente.
+    Cada factor se convierte en un Ex independiente mediante .ex()
+    antes de ser enviado recursivamente a fundamental().
+
+    No se reconstruye el producto completo mediante Ex(str(nodo)).
     """
-
-    print("NODO PRODUCTO:", nodo)
 
     lista_indices = []
 
-    for i, factor in enumerate(nodo.factors()):
+    for factor in nodo.factors():
 
+        # Copia independiente del factor
         factor_ex = factor.ex()
 
+        # Análisis recursivo
         indices = fundamental(factor_ex)
 
+        # Acumular índices sin eliminar dummies
         lista_indices.extend(indices)
 
     return lista_indices
