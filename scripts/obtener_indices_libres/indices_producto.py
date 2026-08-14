@@ -6,6 +6,18 @@ def indices_producto(nodo, fundamental):
     antes de ser enviado recursivamente a fundamental().
 
     No se reconstruye el producto completo mediante Ex(str(nodo)).
+
+    Parameters
+    ----------
+    nodo : cadabra2.ExNode
+        El nodo que representa el producto.
+    fundamental : callable
+        Función recursiva para analizar subexpresiones.
+
+    Returns
+    -------
+    list of tuple
+        La lista de tuplas (representación, posición) con todos los índices acumulados de los factores.
     """
 
     lista_indices = []

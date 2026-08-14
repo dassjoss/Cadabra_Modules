@@ -19,6 +19,16 @@ def fundamental(expr):
     Esta función NO reconstruye expresiones mediante Ex(str(expr)).
     Las subestructuras obtenidas durante la recursión deben convertirse
     en Ex independientes antes de volver a llamar a fundamental().
+
+    Parameters
+    ----------
+    expr : cadabra2.Ex
+        La expresión independiente que se va a recorrer.
+
+    Returns
+    -------
+    list of tuple
+        La lista completa de todos los índices encontrados (duplicados y libres) en forma de tuplas (representación, posición).
     """
 
     # =========================================================
@@ -89,6 +99,16 @@ def obtener_indices_libres(expr):
 
     A partir de ese momento, todo el recorrido recursivo trabaja
     exclusivamente con objetos Ex independientes.
+
+    Parameters
+    ----------
+    expr : cadabra2.Ex or str
+        La expresión de Cadabra (o su representación en string) que se va a analizar.
+
+    Returns
+    -------
+    list of tuple
+        La lista de tuplas (representación, posición) conteniendo los índices libres finales.
     """
 
     # =========================================================

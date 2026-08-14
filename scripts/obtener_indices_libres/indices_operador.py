@@ -13,6 +13,18 @@ def indices_operador(nodo, fundamental):
     Los índices propios del operador se obtienen directamente de
     `nodo`, mientras que su argumento se convierte mediante `.ex()`
     antes de pasarlo recursivamente a `fundamental()`.
+
+    Parameters
+    ----------
+    nodo : cadabra2.ExNode
+        El nodo que representa al operador.
+    fundamental : callable
+        Función recursiva para analizar subexpresiones.
+
+    Returns
+    -------
+    list of tuple
+        La lista de tuplas (representación, posición) con los índices del operador y su argumento.
     """
 
     # =========================================================

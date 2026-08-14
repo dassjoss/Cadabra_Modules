@@ -9,10 +9,20 @@ def es_operador_generico(nodo):
     Un nodo es considerado operador genérico si:
 
         1. Tiene al menos un índice propio.
-        2. Al menos uno de sus índices propios es subíndice.
+        2. Al menos uno de sus índices propios es subíndice (o superíndice).
         3. Tiene un argumento no vacío.
 
     No se intenta identificar el símbolo del operador.
+
+    Parameters
+    ----------
+    nodo : cadabra2.ExNode
+        El nodo que se va a evaluar.
+
+    Returns
+    -------
+    bool
+        True si el nodo es un operador genérico, False en caso contrario.
     """
 
     # =========================================================
@@ -35,21 +45,9 @@ def es_operador_generico(nodo):
     if len(indices_raiz) == 0:
         return False
 
-    # =========================================================
-    # AL MENOS UN ÍNDICE PROPIO DEBE SER SUBÍNDICE
-    # =========================================================
-
-    tiene_indice_sub = any(
-        indice.parent_rel == parent_rel_t.sub
-        for indice in indices_raiz
-    )
-
-    if not tiene_indice_sub:
-        return False
-
-    # =========================================================
+    # =============================================================================
     # DEBE TENER UN ARGUMENTO
-    # =========================================================
+    # =============================================================================
 
     argumentos = list(raiz.args())
 

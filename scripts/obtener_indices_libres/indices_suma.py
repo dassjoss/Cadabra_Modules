@@ -9,6 +9,18 @@ def indices_suma(nodo, fundamental):
     obteniendo así una expresión Ex independiente para cada término.
 
     Luego cada término se procesa recursivamente mediante fundamental().
+
+    Parameters
+    ----------
+    nodo : cadabra2.ExNode
+        El nodo que representa la suma.
+    fundamental : callable
+        Función recursiva para analizar subexpresiones.
+
+    Returns
+    -------
+    list of tuple
+        La lista de tuplas (representación, posición) con los índices libres comunes de todos los términos de la suma.
     """
 
     print("NODO SUMA:", nodo)

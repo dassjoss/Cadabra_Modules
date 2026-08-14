@@ -20,6 +20,16 @@ def eliminar_dummies(lista_indices):
 
     3. Tres o más apariciones:
        -> error.
+
+    Parameters
+    ----------
+    lista_indices : list of tuple
+        Una lista de tuplas donde cada tupla contiene (representación, posición) del índice.
+
+    Returns
+    -------
+    list of tuple
+        La lista filtrada que contiene únicamente los índices libres.
     """
 
     # =========================================================
