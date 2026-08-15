@@ -53,10 +53,15 @@ def obtener_nodo_indice(expr, nombre_buscado):
         el ExNode correspondiente durante el recorrido del arbol.
     """
 
+    from scripts.obtener_indices_libres.obtener_indices_libres import obtener_indices_libres
     nombres_indices_libres = []
-
-    for indice in expr.top().free_indices():
-        nombre_completo = get_full_index_name(indice)
+    for indice, posicion in obtener_indices_libres(expr):
+        nodo_indice = next(
+            nodo for nodo in expr
+            if nodo.parent_rel in (parent_rel_t.super, parent_rel_t.sub)
+            and str(nodo) == indice
+        )
+        nombre_completo = get_full_index_name(nodo_indice)
         nombres_indices_libres.append(nombre_completo)
 
     if nombre_buscado not in nombres_indices_libres:
