@@ -47,21 +47,11 @@ def eliminar_dummies(lista_indices):
 
         apariciones[identidad] += 1
 
-    print("APARICIONES:")
-    print(apariciones)
-
     # =========================================================
     # VERIFICAR MULTIPLICIDADES
     # =========================================================
 
     for identidad, cantidad in apariciones.items():
-
-        print(
-            "ÍNDICE:",
-            identidad,
-            "| APARICIONES:",
-            cantidad
-        )
 
         if cantidad > 2:
 
@@ -109,22 +99,11 @@ def eliminar_dummies(lista_indices):
             posicion_a = indice_a[1]
             posicion_b = indice_b[1]
 
-            print(
-                "COMPARANDO DUMMY:",
-                indice_a,
-                "CON",
-                indice_b
-            )
-
             # -------------------------------------------------
             # POSICIONES OPUESTAS → DUMMY
             # -------------------------------------------------
 
             if posicion_a != posicion_b:
-
-                print(
-                    "  >>> CONTRACCIÓN: ELIMINANDO DUMMY"
-                )
 
                 continue
 
