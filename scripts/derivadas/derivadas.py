@@ -1,93 +1,99 @@
-import cadabra2
 from cadabra2 import Ex, parent_rel_t
-from cdb.utils.indices import get_free_indices
+from scripts.get_full_index_name.get_full_index_name import get_full_index_name
+from scripts.obtener_indices_libres.obtener_indices_libres import obtener_indices_libres
+from scripts.mutar_nodo_indice.mutar_nodo_indice import mutar_nodo_indice
+from scripts.obtener_nodo_indice.obtener_nodo_indice import obtener_nodo_indice
+from scripts.mutar_indice.mutar_indice import mutar_indice
 
-from scripts.get_full_index_name import get_full_index_name
-from scripts.mutar_nodo_indice import mutar_nodo_indice
-from scripts.mutar_indice import mutar_indice
+def d_c_g(ex, derivada, conexion, familia):
+    """
+    Expande de forma generalizada las derivadas covariantes presentes en la
+    expresión `ex`, reemplazándolas por derivadas parciales y sus respectivos
+    términos de conexión (símbolos de Christoffel o conexión de espín).
 
+    Parameters
+    ----------
+    ex : cadabra2.Ex
+        La expresión a expandir (se modifica in-place).
+    derivada : str
+        El nombre del operador de derivada covariante (ej. '\\nabla' o 'D').
+    conexion : str
+        El nombre del símbolo de conexión (ej. '\\Gamma' o '\\omega').
+    familia : list of str
+        Lista de nombres de índices disponibles para su uso como índices mudos.
 
-def d_c_g(ex, idx_curvos_totales, idx_planos_totales):
-
-    indices_en_uso = set()
-    iterador_global = iter(ex)
-    print("TIPO ITERADOR:", type(iterador_global))
-
-    for n in iterador_global:
-        nombre = get_full_index_name(n)
-        if nombre not in indices_en_uso:
-            indices_en_uso.add(nombre)
-
-    idx_curvos = [idx for idx in idx_curvos_totales if idx not in indices_en_uso]
-    idx_planos = [idx for idx in idx_planos_totales if idx not in indices_en_uso]
-
+    Returns
+    -------
+    cadabra2.Ex
+        La expresión con las derivadas covariantes completamente expandidas.
+    """
     while True:
-        curvos_trabajo = idx_curvos.copy()
-        planos_trabajo = idx_planos.copy()
-
-        iterador = ex[r'\nabla']
+        iterador = ex[derivada]
         try:
-            nabla = next(iterador)
+            derivada_node = next(iterador)
         except StopIteration:
-            break
+            return ex
 
-        print("TIPO EX:", type(ex))
-        print("EX:", ex)
-        print("CALLABLE EX:", callable(ex))
-        print("ITER EX:", getattr(ex, "__iter__", None))
-        indices_en_uso = set()
-        iterador_global = iter(ex)
-        for n in iterador_global:
-            nombre = get_full_index_name(n)
-            if nombre not in indices_en_uso:
-                indices_en_uso.add(nombre)
+        derivada_ex = derivada_node.ex()
+        derivada_node_copia = derivada_ex.top()
 
-        curvos_trabajo = [idx for idx in curvos_trabajo if idx not in indices_en_uso]
-        planos_trabajo = [idx for idx in planos_trabajo if idx not in indices_en_uso]
+        indice_derivada = next(derivada_node_copia.indices())
+        indice_derivada_nombre = str(indice_derivada.name)
 
-        argumentos = list(nabla.args())
-        if len(argumentos) == 0:
-            nabla.name = r'\partial'
-            continue
+        argumento = next(derivada_node_copia.args())
 
-        dindex = nabla.indices().__next__()
-        terminos_conexion = Ex(0)
+        indices_libres = obtener_indices_libres(argumento.ex())
 
-        for arg in argumentos:
-            nodo_ex = Ex(r'@(arg)')
+        familia_disponible = familia.copy()
 
-            try:
-                indices_libres_cpp = get_free_indices(nodo_ex)
-                indices_logicos = [get_full_index_name(next(iter(idx))) for idx in indices_libres_cpp]
-            except Exception as e:
-                continue
+        indices_libres_referencia = []
+        for indice, posicion in indices_libres:
+            nodo_indice = next(
+                nodo for nodo in argumento.ex()
+                if nodo.parent_rel in (parent_rel_t.super, parent_rel_t.sub)
+                and str(nodo) == indice
+            )
+            nombre_indice = get_full_index_name(nodo_indice)
+            indices_libres_referencia.append((nombre_indice, posicion))
 
-            for nombre_idx in indices_logicos:
+        for nombre_indice, posicion in indices_libres_referencia:
+            # Verificación segura para evitar errores en derivadas dobles
+            if nombre_indice in familia_disponible:
+                familia_disponible.remove(nombre_indice)
 
-                # Si obtener_nodo_indice no está presente en el entorno se maneja limpiamente
-                try:
-                    from scripts.utils import obtener_nodo_indice
-                    idx_original = obtener_nodo_indice(nodo_ex, nombre_idx)
-                except Exception:
-                    continue
+        # Verificación segura para evitar errores en derivadas dobles
+        if indice_derivada_nombre in familia_disponible:
+            familia_disponible.remove(indice_derivada_nombre)
 
-                if nombre_idx in idx_curvos_totales:
+        argumento_ex = argumento.ex()
+        derivada_parcial = Ex(f"\\partial_{{{indice_derivada_nombre}}}{{{argumento_ex.input_form()}}}")
 
-                    mudo = curvos_trabajo.pop(0)
-                    t2 = Ex(r'@(arg)')
-                    mutar_indice(t2, nombre_idx, mudo)
+        termino_conexion = Ex(r'0')
 
-                    nodo_idx = idx_original
+        for nombre_indice, posicion in indices_libres_referencia:
+            if not familia_disponible:
+                raise ValueError("No quedan índices disponibles en la familia para construir los términos de conexión.")
 
-                    if nodo_idx.parent_rel == parent_rel_t.sub:
-                        t1 = Ex(r"-\Gamma^{" + mudo + "}_{" + dindex.name + " " + nombre_idx + "}")
-                    else:
-                        t1 = Ex(r"\Gamma^{" + nombre_idx + "}_{" + dindex.name + " " + mudo + "}")
-                    terminos_conexion = terminos_conexion + t1 * t2
-                    mutar_indice(arg, mudo, nombre_idx)
+            indice_nuevo = familia_disponible.pop(0)
 
-        nabla.name = r'\partial'
-        reemplazo = Ex(r'@(nabla)') + terminos_conexion
-        nabla.replace(reemplazo)
+            argumento_copia = argumento.ex()
+            nodo_indice = obtener_nodo_indice(argumento_copia, nombre_indice)
+            mutar_nodo_indice(nodo_indice, indice_nuevo)
 
-    return None
+            t1 = argumento_copia
+
+            if posicion == 'super':
+                t2 = Ex(f"{conexion}^{{{nombre_indice}}}_{{{indice_derivada_nombre} {indice_nuevo}}}")
+                signo = Ex(r'1')
+            elif posicion == 'sub':
+                t2 = Ex(f"{conexion}^{{{indice_nuevo}}}_{{{indice_derivada_nombre} {nombre_indice}}}")
+                signo = Ex(r'-1')
+            else:
+                raise ValueError("Posición de índice desconocida: " + str(posicion))
+
+            termino = signo * t2 * t1
+            termino_conexion = termino_conexion + termino
+
+        resultado = derivada_parcial + termino_conexion
+        derivada_node.replace(resultado)
+        familia = familia_disponible
