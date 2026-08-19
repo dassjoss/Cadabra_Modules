@@ -22,9 +22,9 @@ def mutar_indice_dos(expr, nombre_original, nombre_nuevo):
         - Si la expresión contiene exactamente 1 ocurrencia, se mutará esa única
           aparición. El intento de mutar la segunda lanzará un RuntimeError
           internamente en `mutar_indice`, el cual es capturado silenciosamente.
-        - Si la expresión no contiene ninguna ocurrencia, el bucle atrapará
-          el error desde el primer intento y terminará sin modificar nada ni
-          arrojar excepciones.
+        - Si la expresión no contiene ninguna ocurrencia, lanzará un `RuntimeError`
+          desde el primer intento (replicando el comportamiento original de
+          `mutar_indice`).
 
     Args:
         expr: cadabra2.Ex
@@ -33,11 +33,11 @@ def mutar_indice_dos(expr, nombre_original, nombre_nuevo):
 
         nombre_original: str
             Nombre completo del índice que se desea buscar.
-            Ejemplo: r'\\alpha' o r'\\lambda_{1}'.
+            Ejemplo: r'\alpha' o r'\lambda_{1}'.
 
         nombre_nuevo: str
             Nombre completo que tendrá el índice tras la mutación.
-            Ejemplo: r'\\beta' o r'\\mu_{2}'.
+            Ejemplo: r'\beta' o r'\mu_{2}'.
 
     Returns:
         None
@@ -48,13 +48,20 @@ def mutar_indice_dos(expr, nombre_original, nombre_nuevo):
         ValueError, RuntimeError:
             Cualquier error estructural derivado de `mutar_nodo_indice` (por
             ejemplo, si `nombre_nuevo` tiene una sintaxis de subíndice inválida)
-            se propagará normalmente hacia arriba. El único RuntimeError que
-            se silencia es el relacionado con no encontrar el índice.
+            se propagará normalmente hacia arriba. El `RuntimeError` por no
+            encontrar el índice solo se lanza si hay 0 ocurrencias; si hay
+            exactamente 1 ocurrencia, el error del segundo intento se silencia.
     """
+    mutados = 0
     for i in range(2):
         try:
             mutar_indice(expr, nombre_original, nombre_nuevo)
-        except RuntimeError:
+            mutados += 1
+        except RuntimeError as e:
+            if mutados == 0:
+                # Si no logró mutar ni siquiera 1, propagamos el error
+                raise e
+            # Si logró mutar 1 y falló en el 2do intento, silenciamos y salimos
             break
     
     
