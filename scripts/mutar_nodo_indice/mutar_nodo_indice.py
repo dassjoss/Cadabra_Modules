@@ -141,10 +141,12 @@ def mutar_nodo_indice(nodo, nombre_nuevo):
         hijo.erase()
 
     # ========================================================
-    # 4. Cambiar el nombre principal
+    # 4. Cambiar el nombre principal y propiedades numéricas
     # ========================================================
 
     nodo.name = nuevo_nombre
+    if hasattr(nuevo_nodo, 'multiplier'):
+        nodo.multiplier = nuevo_nodo.multiplier
 
     # ========================================================
     # 5. Reconstruir el subindice si existe

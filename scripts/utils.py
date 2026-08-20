@@ -6,6 +6,7 @@ from .obtener_indices_libres import obtener_indices_libres, fundamental, indices
 from .derivadas import d_c_g
 from .mutar_indices_dos import mutar_indice_dos
 from .mutar_indices_multiples import mutar_indices_multiples
+from .separar_indices import separar_indices
 
 __all__ = [
     "get_full_index_name",
@@ -18,4 +19,5 @@ __all__ = [
     "d_c_g",
     "mutar_indice_dos",
     "mutar_indices_multiples",
+    "separar_indices",
 ]
