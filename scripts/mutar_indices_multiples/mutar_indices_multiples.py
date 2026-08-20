@@ -17,6 +17,10 @@ def mutar_indices_multiples(expr, conjunto_original, conjunto_nuevo, termino_sum
     de índices en una expresión (ej. cambiar '\\alpha, \\beta, \\gamma' por
     '\\mu, \\nu, \\rho').
 
+    LIMITACIONES:
+        - Esta función no opera correctamente si la expresión se encuentra bajo un signo de integral.
+        - Esta función no funciona si la expresión está en formato zoom (zoom_in).
+
     Args:
         expr: cadabra2.Ex
             Expresión de Cadabra sobre la cual realizar la mutación. El objeto
@@ -56,6 +60,8 @@ def mutar_indices_multiples(expr, conjunto_original, conjunto_nuevo, termino_sum
             la cantidad de índices en `conjunto_nuevo`.
         IndexError:
             Si `termino_suma` se sale del rango de los términos disponibles.
+        TypeError:
+            Si `termino_suma` no es None y la expresión no es una suma.
         RuntimeError:
             Propagado por `mutar_indice` si `repetido=False` y el índice no se
             encuentra en la expresión.
@@ -73,6 +79,9 @@ def mutar_indices_multiples(expr, conjunto_original, conjunto_nuevo, termino_sum
 
     # 3. Iterar y aplicar la mutación correspondiente
     if termino_suma is not None:
+        if expr.top().name != r'\sum':
+            raise TypeError("No se encontró el termino_suma pues no es una suma")
+            
         termino_encontrado = False
         # Debemos iterar manualmente y detenernos en el índice deseado.
         # En la API de Cadabra (C++ wrapper), usar list(children()) crea copias del
