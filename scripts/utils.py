@@ -7,6 +7,7 @@ from .derivadas import d_c_g
 from .mutar_indices_dos import mutar_indice_dos
 from .mutar_indices_multiples import mutar_indices_multiples
 from .separar_indices import separar_indices
+from .shouten_indices import shouten_indices
 
 __all__ = [
     "get_full_index_name",
@@ -20,4 +21,5 @@ __all__ = [
     "mutar_indice_dos",
     "mutar_indices_multiples",
     "separar_indices",
+    "shouten_indices",
 ]
