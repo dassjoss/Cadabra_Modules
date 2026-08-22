@@ -8,6 +8,7 @@ from .mutar_indices_dos import mutar_indice_dos
 from .mutar_indices_multiples import mutar_indices_multiples
 from .separar_indices import separar_indices
 from .shouten_indices import shouten_indices
+from .obtener_factor.obtener_factor import obtener_factor
 
 __all__ = [
     "get_full_index_name",
@@ -22,4 +23,5 @@ __all__ = [
     "mutar_indices_multiples",
     "separar_indices",
     "shouten_indices",
+    "obtener_factor",
 ]

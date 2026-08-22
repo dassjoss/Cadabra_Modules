@@ -1,0 +1,1 @@
+from .obtener_factor_multiplicativo import obtener_factor_multiplicativo

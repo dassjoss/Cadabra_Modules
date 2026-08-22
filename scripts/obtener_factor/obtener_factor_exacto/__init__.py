@@ -1,0 +1,1 @@
+from .obtener_factor_exacto import obtener_factor_exacto
