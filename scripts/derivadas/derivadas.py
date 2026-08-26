@@ -71,6 +71,8 @@ def d_c_g(ex, derivada, conexion, familia):
         termino_conexion = Ex(r'0')
 
         for nombre_indice, posicion in indices_libres_referencia:
+            if nombre_indice not in familia:
+                continue
             if not familia_disponible:
                 raise ValueError("No quedan índices disponibles en la familia para construir los términos de conexión.")
 
