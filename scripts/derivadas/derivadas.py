@@ -85,10 +85,10 @@ def d_c_g(ex, derivada, conexion, familia):
             t1 = argumento_copia
 
             if posicion == 'super':
-                t2 = Ex(f"{conexion}^{{{nombre_indice}}}_{{{indice_derivada_nombre} {indice_nuevo}}}")
+                t2 = Ex(f"{conexion}_{{{indice_derivada_nombre} {indice_nuevo}}}^{{{nombre_indice}}}")
                 signo = Ex(r'1')
             elif posicion == 'sub':
-                t2 = Ex(f"{conexion}^{{{indice_nuevo}}}_{{{indice_derivada_nombre} {nombre_indice}}}")
+                t2 = Ex(f"{conexion}_{{{indice_derivada_nombre} {nombre_indice}}}^{{{indice_nuevo}}}")
                 signo = Ex(r'-1')
             else:
                 raise ValueError("Posición de índice desconocida: " + str(posicion))
