@@ -11,6 +11,7 @@ from .separar_indices import separar_indices
 from .shouten_indices import shouten_indices
 from .obtener_factor.obtener_factor import obtener_factor
 from .eliminar_metricas import eliminar_metricas
+from .ordenar import ordenar
 
 __all__ = [
     "get_full_index_name",
@@ -28,4 +29,5 @@ __all__ = [
     "shouten_indices",
     "obtener_factor",
     "eliminar_metricas",
+    "ordenar",
 ]
