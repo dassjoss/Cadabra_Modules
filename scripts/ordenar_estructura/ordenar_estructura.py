@@ -27,16 +27,41 @@ def _obtener_factores_tensoriales(ex):
     top = ex.top()
     factores = top.children() if top.name == r'\prod' else [top]
         
+    def es_operador(n):
+        own = list(n.own_indices())
+        if len(own) == 0: return False
+        args = list(n.args())
+        if len(args) == 0: return False
+        if str(args[0]).strip() == "": return False
+        return True
+
+    def extract_indices(n):
+        inds = []
+        if es_operador(n):
+            for idx in n.own_indices():
+                if idx.name != '1':
+                    pos = 'abajo' if 'sub' in str(idx.parent_rel) else 'arriba'
+                    inds.append((str(idx), pos))
+            for arg in n.args():
+                inds.extend(extract_indices(arg.ex().top()))
+        else:
+            if n.name == r'\prod' or n.name == r'\sum' or n.name == r'\add':
+                for c in n.children():
+                    if c.name != r'\comma':
+                        inds.extend(extract_indices(c))
+            else:
+                for idx in n.indices():
+                    if idx.name != '1':
+                        pos = 'abajo' if 'sub' in str(idx.parent_rel) else 'arriba'
+                        inds.append((str(idx), pos))
+        return inds
+
     resultado = []
     for i_nodo, nodo in enumerate(factores):
         if nodo.name == r'\comma':
             continue
             
-        indices = []
-        for idx in nodo.indices():
-            if idx.name != '1': # Evita exponentes matemáticos
-                pos = 'abajo' if 'sub' in str(idx.parent_rel) else 'arriba'
-                indices.append((str(idx), pos))
+        indices = extract_indices(nodo)
                 
         # Si tiene índices, se considera un factor tensorial
         if indices:
