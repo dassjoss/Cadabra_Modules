@@ -403,7 +403,7 @@ def ordenar_estructura(ex, orden_str, indices_familias, metricas_map=None):
                     )
                     
                     if n_movs > 0:
-                        curr_ex = eliminar_metricas_bucle(res_f2, n_movs)
+                        curr_ex = eliminar_metricas_bucle(res_f2, n_movs, indices_familias, metricas_map)
                     else:
                         curr_ex = res_f2
                         
@@ -428,7 +428,7 @@ def ordenar_estructura(ex, orden_str, indices_familias, metricas_map=None):
                 )
                 
                 if n_movs > 0:
-                    curr_ex = eliminar_metricas_bucle(res_f2, n_movs)
+                    curr_ex = eliminar_metricas_bucle(res_f2, n_movs, indices_familias, metricas_map)
                 else:
                     curr_ex = res_f2
                     
