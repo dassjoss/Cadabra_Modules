@@ -10,8 +10,9 @@ from .mutar_indices_multiples import mutar_indices_multiples
 from .separar_indices import separar_indices
 from .shouten_indices import shouten_indices
 from .obtener_factor.obtener_factor import obtener_factor
-from .eliminar_metricas import eliminar_metricas
+from .eliminar_metricas import eliminar_metricas_bucle
 from .ordenar import ordenar
+from .ordenar_estructura.ordenar_estructura import ordenar_estructura
 
 __all__ = [
     "get_full_index_name",
@@ -28,6 +29,7 @@ __all__ = [
     "separar_indices",
     "shouten_indices",
     "obtener_factor",
-    "eliminar_metricas",
+    "eliminar_metricas_bucle",
     "ordenar",
+    "ordenar_estructura",
 ]

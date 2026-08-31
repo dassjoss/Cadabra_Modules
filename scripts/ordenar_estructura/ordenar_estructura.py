@@ -1,74 +1,237 @@
-def ordenar_estructura(ex,orden):
+import cadabra2
+from cadabra2 import Ex
+from scripts.eliminar_metricas.eliminar_metricas import eliminar_metricas_bucle
 
 
-
-
-    """
-    Función para ordenar términos en Cadabra de forma ordenada.
-    se dará un .ex, que se espera sea una suma o un solo termino. 
-    Ordenará sobre cada uno de los eleentos según el orden que se imponga en orden
-    y devolverá el resultado como un .ex
-    """
-
-    """
-    En muchas ocasiones al hacer canonicalise se desordenan los objetos debido a que 
-    se multiplica por una metrica. Sin embargo, para comparar terminos a ojo, es fundamental
-    Poder ver los terminos con el mismo orden. 
-    
-    """
-
-    sort_product(ex) # Suponiendo el SortOrtder ya se definió en el kernel para un tratameinto mas rapido, en caso de que no, tomará el defaul
-    
-    """
-    si ex es una suma:
-        Iterar sobre cada uno de los elementos
-    si no es:
-       acá es la parte importante. El objeto tiene que ser un producto, en este producto,se hace lo sigueinte
-       se obtienen los factores de ese producto. Además de como este factor tiene por ejemplo sus indices. 
-       Por ejemplo: P^{a}_{b c} \epsilon^{c x w z}
-       Para este caso los factores son: P^{a}_{b c}, \epsilon^{c x w z}
-       El nombre base de cada uno es P, \epsilon. y se debe de crear una lista/diccionario de factores de la forma:
-       P: {"arriba": [a], "abajo": [b, c], },
-       epsilon: {"arriba": [c, x, w, z], }
-       En orden de aparición para los indices, pues si se tiene por ejemplo X^{i}_{a b}^{d}
-       se debe poner X: {"arriba": [i,d], "abajo": [a,b], }
-       Hay que verificar cuales de estos factores tiene o no indices, si el factor es un escalar, entonces continue
-       Luego se hace un split del orden deseado. Es decir, supongamos se tiene en orden $ P_{a}^{b c} \epsilon_{c x w z}$
-       Entonces, se comparan los terminos de ex con esta lista que representa el orden deseado.
-       Por ejemplo, para el primer factor del orden deseado, en este caso $P_{a}^{b c}$  se comparar con el factor de  $P^{a}_{b c}$ 
-       Luego como se encuentra el mismo nombre base entonces se pregunta, El primero de los indices coindice en tener la misma posicion?
-       En este caso son distintas, pues el orden deseado es para el primer indice abajo, por tanto hay que introducir una metrica
-       Entonces hay que hacer $P^{a}_{b c}->P_{a_{1}}_{b c} \eta^{a a_{1}}$, acaá hay que aclarar que hay que hacer la relacion entre la metrica y los indices, es decir
-       Se debe de poder saber cual es la metrica para los indices, y el orden de como se introduce los indices de la metrica \eta^{a a_{1}}, siempre debe de ser ese, 
-       pues posteriormente se introducirá un eliminate_metric_bucle, y esa lee el primer indice que ve para eliminarlo de la expreison. 
-       Analogamente se tiene que el segundo indice,b, está abajo, pero en el orden deseado se quiere arriba, entonces hay que hacer $P^{a}_{b c}->P^{a}^{b_{1}}_{c} \eta_{b b_{1}}$
-       Y luego aplicar nuevamente eliminate_metric_bucle, o se puede hacer la sustitucion masiva
-       $P^{a}_{b c}->P_{a}^{b_{1}}^{c_{1}} \eta^{a a_{1}} \eta_{b b_{1}} \eta_{c c_{1}}$  
-       Para que no hayan conflictos se debe de dar ex, con un orden establecido, es decir, se desea que haya la misma cantidad de factores
-       en ex como en orden, y que estén en orden correcto o en su defecto llamar a la funcion sort_order_with... De esta forma, se desea que
-       Para este ejemplo concreto la funcion sea capaz de hacer esto:
-
-       orden:P_{x y}^{y} P^{a}_{b}^{c} \epsilon_{c w x z}
-       ex: P^{a b h} P_{v b c} \epsilon_{h z a z }
-
-       P_{x y}^{c} P^{a}_{b}^{c} \epsilon_{c w x z}-> P^{a_{1} b{1} h} P_{v b c} \eta_{x a_{1}} \eta_{y b{1}} ....
-
-
-
-       
-       
-
-
-       
-           
-
+def _obtener_familia_indice(idx_name, indices_familias):
+    familias_encontradas = []
+    for familia, indices in indices_familias.items():
+        if idx_name in indices:
+            familias_encontradas.append(familia)
+            
+    if not familias_encontradas:
+        raise RuntimeError(f"No se pudo determinar la familia del índice '{idx_name}'. El índice no aparece en ninguna familia de indices_familias.")
         
+    if len(familias_encontradas) > 1:
+        familias_str = ", ".join(familias_encontradas)
+        raise RuntimeError(f"El índice '{idx_name}' pertenece a múltiples familias: {familias_str}. La configuración de indices_familias es ambigua.")
+        
+    return familias_encontradas[0]
 
+def _obtener_factores_tensoriales(ex):
     """
+    Recibe un término (Ex) y extrae sus factores tensoriales en orden.
+    Ignora los factores escalares y los exponentes numéricos.
+    Retorna una lista de diccionarios con la estructura de cada factor.
+    """
+    top = ex.top()
+    factores = top.children() if top.name == r'\prod' else [top]
+        
+    resultado = []
+    for i_nodo, nodo in enumerate(factores):
+        if nodo.name == r'\comma':
+            continue
+            
+        indices = []
+        for idx in nodo.indices():
+            if idx.name != '1': # Evita exponentes matemáticos
+                pos = 'abajo' if 'sub' in str(idx.parent_rel) else 'arriba'
+                indices.append((str(idx), pos))
+                
+        # Si tiene índices, se considera un factor tensorial
+        if indices:
+            resultado.append({"base": nodo.name, "indices": indices, "idx_child": i_nodo})
+            
+    return resultado
+
+def _asociar_factores(term_factors, orden_factors):
+    """
+    Asocia factores de un término a las instrucciones del orden.
+    El 'orden' es una secuencia de instrucciones de búsqueda de izquierda a derecha.
+    Devuelve una lista de diccionarios:
+        [{"idx_term": 0, "idx_orden": 0}, {"idx_term": 2, "idx_orden": 1}, ...]
+    """
+    asociaciones = []
+    usados_term = set()
+    
+    for i_orden, f_orden in enumerate(orden_factors):
+        # Búsqueda de izquierda a derecha en los factores del término
+        for i_term, f_term in enumerate(term_factors):
+            if i_term not in usados_term:
+                if f_term["base"] == f_orden["base"] and len(f_term["indices"]) == len(f_orden["indices"]):
+                    asociaciones.append({"idx_term": i_term, "idx_orden": i_orden})
+                    usados_term.add(i_term)
+                    break # Factor encontrado, pasamos a la siguiente instrucción de orden
+                    
+    return asociaciones
+
+def _get_existing_indices(ex_completa):
+    from scripts.obtener_indices_libres.obtener_indices_libres import fundamental
+    usados = set()
+    indices_info = fundamental(ex_completa)
+    for idx_name, idx_pos in indices_info:
+        usados.add(str(idx_name))
+    return usados
+
+def _generar_indice_seguro(base_name, usados):
+    base_clean = ''.join([c for c in base_name if c.isalpha()])
+    if not base_clean: base_clean = "X"
+    counter = 1
+    while True:
+        nuevo = f"{base_clean}_{{{counter}}}"
+        if nuevo not in usados:
+            usados.add(nuevo)
+            return nuevo
+        counter += 1
+
+def _transformar_factor_con_metricas_fase2(ex_completa, term_node, asociaciones, orden_factors, indices_familias, metricas_map):
+    term_ex = Ex(str(term_node))
+    term_factors = _obtener_factores_tensoriales(term_ex)
+    usados = _get_existing_indices(ex_completa)
+    
+    asoc_map = {a['idx_term']: a for a in asociaciones}
+    reemplazos = {}
+    
+    n_total_movimientos = 0
+    
+    for i_term, f_term in enumerate(term_factors):
+        if i_term not in asoc_map: continue
+            
+        a = asoc_map[i_term]
+        f_orden = orden_factors[a['idx_orden']]
+        
+        cambios = []
+        for j, idx_f in enumerate(f_term["indices"]):
+            pos_f = idx_f[1]
+            pos_o = f_orden["indices"][j][1]
+            if pos_f != pos_o:
+                cambios.append({"idx_idx": j, "idx_name": idx_f[0], "from_pos": pos_f, "to_pos": pos_o})
+                
+        if not cambios: continue
+        
+        n_total_movimientos += len(cambios)
+            
+        metricas = []
+        nuevos_indices_factor = []
+        
+        for j, idx_f in enumerate(f_term["indices"]):
+            pos_f = idx_f[1]
+            cambio = next((c for c in cambios if c["idx_idx"] == j), None)
+            
+            if cambio:
+                nuevo_idx = _generar_indice_seguro(cambio["idx_name"], usados)
+                nuevos_indices_factor.append((nuevo_idx, cambio["to_pos"]))
+                
+                family = _obtener_familia_indice(cambio["idx_name"], indices_familias)
+                
+                if not metricas_map or family not in metricas_map:
+                    raise RuntimeError(f"No se encontró una métrica para la familia '{family}' en metricas_map.")
+                
+                met_str = metricas_map[family]
+                
+                if cambio["from_pos"] == "arriba" and cambio["to_pos"] == "abajo":
+                    metricas.append(f"{met_str}^{{{cambio['idx_name']} {nuevo_idx}}}")
+                elif cambio["from_pos"] == "abajo" and cambio["to_pos"] == "arriba":
+                    metricas.append(f"{met_str}_{{{cambio['idx_name']} {nuevo_idx}}}")
+            else:
+                nuevos_indices_factor.append((idx_f[0], pos_f))
+                
+        def _pos_to_syntax(idx_name, pos): return f"^{{{idx_name}}}" if pos == "arriba" else f"_{{{idx_name}}}"
+            
+        nuevo_factor_str = f"{f_term['base']}" + "".join([_pos_to_syntax(n, p) for n, p in nuevos_indices_factor])
+        bloque_str = f"{nuevo_factor_str} {' '.join(metricas)}"
+        
+        reemplazos[f_term["idx_child"]] = Ex(bloque_str)
+        
+    nuevo_term_ex = Ex(str(term_node))
+    top = nuevo_term_ex.top()
+    if top.name == r'\prod':
+        for i, c in enumerate(top.children()):
+            if i in reemplazos:
+                c.replace(reemplazos[i])
+    else:
+        if 0 in reemplazos:
+            if top.multiplier != 1:
+                nuevo_term_ex = Ex(f"{top.multiplier} {str(reemplazos[0])}")
+            else:
+                nuevo_term_ex = Ex(str(reemplazos[0]))
+        
+    return nuevo_term_ex, n_total_movimientos
 
 
+def ordenar_estructura(ex, orden_str, indices_familias, metricas_map=None):
+    """
+    Fase 1: Análisis y matching estructural.
+    Fase 2: Transformación de factores y métricas puente.
+    """
+    ex_copy = Ex(str(ex))
+    orden_ex = Ex(orden_str)
+    top_orden = orden_ex.top()
+    
+    # Manejar si el orden fue pasado con comas u otro formato
+    if top_orden.name == r'\comma' or top_orden.name == r'\prod':
+        nodos_orden = top_orden.children()
+    else:
+        nodos_orden = [top_orden]
+        
+    orden_factors = []
+    for nodo in nodos_orden:
+        if nodo.name == r'\comma': continue
+        indices = []
+        for idx in nodo.indices():
+            if idx.name != '1':
+                pos = 'abajo' if 'sub' in str(idx.parent_rel) else 'arriba'
+                indices.append((str(idx), pos))
+        if indices:
+            orden_factors.append({"base": nodo.name, "indices": indices})
 
-
-
-
-    pass
+    top_ex = ex_copy.top()
+    if top_ex.name == r'\add' or top_ex.name == r'\sum':
+        terminos = []
+        for term in top_ex.children():
+            curr_ex = Ex(str(term))
+            
+            for i_ord, f_orden in enumerate(orden_factors):
+                tf_s = _obtener_factores_tensoriales(curr_ex)
+                if not tf_s:
+                    continue
+                    
+                asoc_s = _asociar_factores(tf_s, orden_factors)
+                asoc_actual = [a for a in asoc_s if a['idx_orden'] == i_ord]
+                
+                if asoc_actual:
+                    res_f2, n_movs = _transformar_factor_con_metricas_fase2(
+                        curr_ex, curr_ex.top(), asoc_actual, orden_factors, indices_familias, metricas_map
+                    )
+                    
+                    if n_movs > 0:
+                        curr_ex = eliminar_metricas_bucle(res_f2, n_movs)
+                    else:
+                        curr_ex = res_f2
+                        
+            terminos.append(str(curr_ex))
+            
+        return Ex(" + ".join(terminos))
+        
+    else:
+        curr_ex = Ex(str(top_ex))
+        
+        for i_ord, f_orden in enumerate(orden_factors):
+            tf_s = _obtener_factores_tensoriales(curr_ex)
+            if not tf_s:
+                continue
+                
+            asoc_s = _asociar_factores(tf_s, orden_factors)
+            asoc_actual = [a for a in asoc_s if a['idx_orden'] == i_ord]
+            
+            if asoc_actual:
+                res_f2, n_movs = _transformar_factor_con_metricas_fase2(
+                    curr_ex, curr_ex.top(), asoc_actual, orden_factors, indices_familias, metricas_map
+                )
+                
+                if n_movs > 0:
+                    curr_ex = eliminar_metricas_bucle(res_f2, n_movs)
+                else:
+                    curr_ex = res_f2
+                    
+        return curr_ex

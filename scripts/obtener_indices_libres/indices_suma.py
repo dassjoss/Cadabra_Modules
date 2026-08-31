@@ -23,27 +23,15 @@ def indices_suma(nodo, fundamental):
         La lista de tuplas (representación, posición) con los índices libres comunes de todos los términos de la suma.
     """
 
-    print("NODO SUMA:", nodo)
-
     indices_terminos = []
 
-    for i, termino in enumerate(nodo.children()):
-
-        print(f"\n--- TÉRMINO {i} ---")
-        print("NODO ORIGINAL:")
-        print(termino)
+    for termino in nodo.children():
 
         termino_ex = termino.ex()
-
-        print("EX INDEPENDIENTE:")
-        print(termino_ex)
 
         indices = fundamental(termino_ex)
 
         indices = eliminar_dummies(indices)
-
-        print("ÍNDICES LIBRES:")
-        print(indices)
 
         indices_terminos.append(indices)
 
