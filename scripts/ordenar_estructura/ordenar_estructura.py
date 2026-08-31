@@ -99,8 +99,14 @@ def _get_existing_indices(ex_completa):
     return usados
 
 def _generar_indice_seguro(base_name, usados):
-    base_clean = ''.join([c for c in base_name if c.isalpha()])
-    if not base_clean: base_clean = "X"
+    """
+    Genera un nombre de índice que no esté en 'usados', preservando
+    la raíz de símbolos LaTeX (como '\\mu') y evitando colisiones.
+    """
+    base_clean = ''.join([c for c in base_name if c.isalpha() or c == '\\'])
+    if not base_clean:
+        base_clean = "X"
+        
     counter = 1
     while True:
         nuevo = f"{base_clean}_{{{counter}}}"
