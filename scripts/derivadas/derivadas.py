@@ -1,6 +1,6 @@
 from cadabra2 import Ex, parent_rel_t
 from scripts.get_full_index_name.get_full_index_name import get_full_index_name
-from scripts.obtener_indices_libres.obtener_indices_libres import obtener_indices_libres
+from scripts.obtener_indices_libres.obtener_indices_libres import obtener_indices_libres, fundamental
 from scripts.mutar_nodo_indice.mutar_nodo_indice import mutar_nodo_indice
 from scripts.obtener_nodo_indice.obtener_nodo_indice import obtener_nodo_indice
 from scripts.mutar_indice.mutar_indice import mutar_indice
@@ -27,75 +27,87 @@ def d_c_g(ex, derivada, conexion, familia):
     cadabra2.Ex
         La expresión con las derivadas covariantes completamente expandidas.
     """
-    while True:
-        iterador = ex[derivada]
-        try:
-            derivada_node = next(iterador)
-        except StopIteration:
-            return ex
+    top_name = ex.top().name
+    es_suma = (top_name == r'\sum')
 
-        derivada_ex = derivada_node.ex()
-        derivada_node_copia = derivada_ex.top()
+    if es_suma:
+        sumandos = [s.ex() for s in ex.top().args()]
+    else:
+        sumandos = [Ex(str(ex))]
 
-        indice_derivada = next(derivada_node_copia.indices())
-        indice_derivada_nombre = str(indice_derivada.name)
+    for sumando in sumandos:
+        indices_ocupados = set(idx[0] for idx in fundamental(sumando))
+        familia_disponible = [f for f in familia if f not in indices_ocupados]
 
-        argumento = next(derivada_node_copia.args())
+        while True:
+            try:
+                derivada_node = next(sumando[derivada])
+            except StopIteration:
+                break
 
-        indices_libres = obtener_indices_libres(argumento.ex())
+            derivada_node_copia = derivada_node.ex().top()
+            argumento = next(derivada_node_copia.args())
 
-        familia_disponible = familia.copy()
+            indices_libres = obtener_indices_libres(argumento.ex())
 
-        indices_libres_referencia = []
-        for indice, posicion in indices_libres:
-            nodo_indice = next(
-                nodo for nodo in argumento.ex()
-                if nodo.parent_rel in (parent_rel_t.super, parent_rel_t.sub)
-                and str(nodo) == indice
-            )
-            nombre_indice = get_full_index_name(nodo_indice)
-            indices_libres_referencia.append((nombre_indice, posicion))
+            indices_libres_referencia = []
+            for indice, posicion in indices_libres:
+                nodo_indice = next(
+                    nodo for nodo in argumento.ex()
+                    if nodo.parent_rel in (parent_rel_t.super, parent_rel_t.sub)
+                    and str(nodo) == indice
+                )
+                nombre_indice = get_full_index_name(nodo_indice)
+                indices_libres_referencia.append((nombre_indice, posicion))
 
-        for nombre_indice, posicion in indices_libres_referencia:
-            # Verificación segura para evitar errores en derivadas dobles
-            if nombre_indice in familia_disponible:
-                familia_disponible.remove(nombre_indice)
+            indice_derivada = next(derivada_node_copia.indices())
+            indice_derivada_nombre = str(indice_derivada.name)
+            
+            argumento_ex = argumento.ex()
+            derivada_parcial = Ex(f"\\partial_{{{indice_derivada_nombre}}}{{{argumento_ex.input_form()}}}")
 
-        # Verificación segura para evitar errores en derivadas dobles
-        if indice_derivada_nombre in familia_disponible:
-            familia_disponible.remove(indice_derivada_nombre)
+            termino_conexion = Ex(r'0')
 
-        argumento_ex = argumento.ex()
-        derivada_parcial = Ex(f"\\partial_{{{indice_derivada_nombre}}}{{{argumento_ex.input_form()}}}")
+            for nombre_indice, posicion in indices_libres_referencia:
+                if nombre_indice not in familia:
+                    continue
+                if not familia_disponible:
+                    raise ValueError(
+                        "No quedan índices disponibles en la familia para construir "
+                        "los términos de conexión."
+                    )
 
-        termino_conexion = Ex(r'0')
+                indice_nuevo = familia_disponible.pop(0)
 
-        for nombre_indice, posicion in indices_libres_referencia:
-            if nombre_indice not in familia:
-                continue
-            if not familia_disponible:
-                raise ValueError("No quedan índices disponibles en la familia para construir los términos de conexión.")
+                argumento_copia = argumento.ex()
+                nodo_indice = obtener_nodo_indice(argumento_copia, nombre_indice)
+                mutar_nodo_indice(nodo_indice, indice_nuevo)
 
-            indice_nuevo = familia_disponible.pop(0)
+                t1 = argumento_copia
 
-            argumento_copia = argumento.ex()
-            nodo_indice = obtener_nodo_indice(argumento_copia, nombre_indice)
-            mutar_nodo_indice(nodo_indice, indice_nuevo)
+                if posicion == 'super':
+                    t2 = Ex(f"{conexion}_{{{indice_derivada_nombre} {indice_nuevo}}}^{{{nombre_indice}}}")
+                    signo = Ex(r'1')
+                elif posicion == 'sub':
+                    t2 = Ex(f"{conexion}_{{{indice_derivada_nombre} {nombre_indice}}}^{{{indice_nuevo}}}")
+                    signo = Ex(r'-1')
+                else:
+                    raise ValueError("Posición de índice desconocida: " + str(posicion))
 
-            t1 = argumento_copia
+                termino = signo * t2 * t1
+                termino_conexion = termino_conexion + termino
 
-            if posicion == 'super':
-                t2 = Ex(f"{conexion}_{{{indice_derivada_nombre} {indice_nuevo}}}^{{{nombre_indice}}}")
-                signo = Ex(r'1')
-            elif posicion == 'sub':
-                t2 = Ex(f"{conexion}_{{{indice_derivada_nombre} {nombre_indice}}}^{{{indice_nuevo}}}")
-                signo = Ex(r'-1')
-            else:
-                raise ValueError("Posición de índice desconocida: " + str(posicion))
+            resultado = derivada_parcial + termino_conexion
+            derivada_node.replace(resultado)
 
-            termino = signo * t2 * t1
-            termino_conexion = termino_conexion + termino
+    if es_suma:
+        suma_total = Ex(r"0")
+        for s in sumandos:
+            suma_total = suma_total + s
+    else:
+        suma_total = sumandos[0]
 
-        resultado = derivada_parcial + termino_conexion
-        derivada_node.replace(resultado)
-        familia = familia_disponible
+    root_it = next(ex[top_name])
+    root_it.replace(suma_total)
+
+    return ex
