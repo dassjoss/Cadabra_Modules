@@ -173,3 +173,13 @@ The core utilities for free index resolution, AST manipulation, metric contracti
 ## License
 
 This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+
+---
+
+## Author
+
+**Jose Ortiz**
+
+Instituto de Física — Universidad de Antioquia (UdeA)
+
+GitHub: [@dassjoss](https://github.com/dassjoss)
