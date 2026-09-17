@@ -14,6 +14,7 @@ from .eliminar_metricas import eliminar_metricas_bucle
 from .ordenar import ordenar
 from .ordenar_estructura.ordenar_estructura import ordenar_estructura
 from .definir_objeto_visual.definir_objeto_visual import definir_objeto_visual
+from .mutar_nodo_completo import mutar_nodo_completo
 
 __all__ = [
     "get_full_index_name",
@@ -34,6 +35,8 @@ __all__ = [
     "ordenar",
     "ordenar_estructura",
     "definir_objeto_visual",
+    "mutar_nodo_completo",
 ]
+
 
 

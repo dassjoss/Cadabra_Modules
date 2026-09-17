@@ -1,13 +1,30 @@
 # Python
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
 
 # Jupyter Notebook
-.ipynb_checkpoints
+.ipynb_checkpoints/
 
 # OS / IDE
 .DS_Store
 .vscode/
 .idea/
+
+# Local experimental scratchpad & research notebooks
+scratch/
+Analisis_A_Note/
+cadabra-explorer/
+
+# Standalone experimental notebooks & diagnostic test runners
+diagnostic_test*.ipynb
+test_outputs.ipynb
+run_tests*.py
+instrumentacion.txt
+
+# Backup files & logs
+*.bak
+*.log
+
+# Ad-hoc kernel diagnostic test scripts inside modules
+scripts/ordenar_estructura/test_*.py
+scripts/derivadas/test_d_c_g_anidadas.py

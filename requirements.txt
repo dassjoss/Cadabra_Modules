@@ -1,0 +1,3 @@
+# Dependencias para Cadabra_Modules
+# Nota: cadabra2 debe estar instalado en el sistema (usualmente a través de AppImage o paquete de sistema)
+ipython>=7.0.0
