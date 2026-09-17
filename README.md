@@ -81,7 +81,13 @@ print(expr)
 
 ### 3. Expanding Covariant Derivatives
 
-The `d_c_g` module expands covariant derivative operators ($\nabla_\mu$, $D_i$) acting on tensor components into partial derivatives and connection terms (Christoffel symbols $\Gamma$ or spin connections $\omega$):
+The `d_c_g` module expands gauge covariant derivative operators ($D_i$) acting on multi-indexed tensors into partial derivatives ($\partial_i$) and spin connection terms ($\omega$). For each free Lorentz index on the target tensor, `d_c_g` generates a connection term and automatically selects contracted dummy indices (`c`, `d`) from the supplied Lorentz-index pool:
+
+$$
+D_i P^{ab} \longrightarrow \partial_i P^{ab} + \omega_{ic}{}^{a} P^{cb} + \omega_{id}{}^{b} P^{ad}
+$$
+
+Note that `d_c_g` mutates the input `Ex` expression in place while returning the updated `Ex` instance:
 
 ```python
 from cadabra2 import Ex, Indices
@@ -92,9 +98,12 @@ lorentz_indices = ["a", "b", "c", "d", "e"]
 Indices(Ex("a, b, c, d, e"), Ex("name=lorentz, position=fixed"))
 Indices(Ex("i, j, k"), Ex("name=space, position=fixed"))
 
-# Expand covariant derivative D_i on tensor P^{a b}
+# Expand gauge covariant derivative D_i on tensor P^{a b}
 expr = Ex(r"D_{i}{P^{a b}}")
 result = d_c_g(expr, r"D", r"\omega", lorentz_indices)
+print(result)
+# Output:
+# \partial_{i}(P^{a b}) + ω_{i c}^{a} P^{c b} + ω_{i d}^{b} P^{a d}
 ```
 
 ---
