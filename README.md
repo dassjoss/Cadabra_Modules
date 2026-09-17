@@ -46,44 +46,7 @@ scripts/
 
 ## Usage Examples
 
-### 1. Extracting Free Indices across Nested Operators
-
-Native Cadabra2 index queries inspect top-level expression nodes, but when tensors are wrapped inside nested operators (e.g., nested covariant derivatives), shallow queries do not recursively inspect the internal argument hierarchy. `obtener_indices_libres` recursively traverses operator arguments to recover all free indices and their positions (`super`/`sub`):
-
-```python
-from cadabra2 import Ex
-from scripts import obtener_indices_libres
-
-# Nested covariant derivative acting on a tensor
-expr = Ex(r"\nabla_{\mu}{\nabla_{\nu}{T^{i j k}_{l m}}}")
-
-# Recursively extract free indices through the operator hierarchy
-free_indices = obtener_indices_libres(expr)
-print(free_indices)
-# Output: [('μ', 'sub'), ('ν', 'sub'), ('i', 'super'), ('j', 'super'), ('k', 'super'), ('l', 'sub'), ('m', 'sub')]
-```
-
-### 2. AST Node Mutation by Path
-
-To modify expressions deterministically without relying on string substitution, `mutar_nodo_completo` navigates the Cadabra AST by child index path and replaces target nodes directly:
-
-$$
-A^{ab} B_{bc} \longrightarrow A^{ab} C_{bc}
-$$
-
-```python
-from cadabra2 import Ex
-from scripts import mutar_nodo_completo
-
-expr = Ex(r"A^{a b} B_{b c}")
-
-# Replace the second factor node (B_{b c}) at child path "1"
-mutar_nodo_completo(expr, Ex(r"C_{b c}"), path="1")
-print(expr)
-# Output: A^{a b} C_{b c}
-```
-
-### 3. Expanding Covariant Derivatives
+### 1. Expanding Covariant Derivatives
 
 The `d_c_g` module expands gauge covariant derivative operators ($D_i$) acting on multi-indexed tensors into partial derivatives ($\partial_i$) and spin connection terms ($\omega$). For each free Lorentz index on the target tensor, `d_c_g` generates a connection term and automatically selects contracted dummy indices (`c`, `d`) from the supplied Lorentz-index pool:
 
@@ -108,6 +71,43 @@ result = d_c_g(expr, r"D", r"\omega", lorentz_indices)
 print(result)
 # Output:
 # \partial_{i}(P^{a b}) + ω_{i c}^{a} P^{c b} + ω_{i d}^{b} P^{a d}
+```
+
+### 2. AST Node Mutation by Path
+
+To modify expressions deterministically without relying on string substitution, `mutar_nodo_completo` navigates the Cadabra AST by child index path and replaces target nodes directly:
+
+$$
+A^{ab} B_{bc} \longrightarrow A^{ab} C_{bc}
+$$
+
+```python
+from cadabra2 import Ex
+from scripts import mutar_nodo_completo
+
+expr = Ex(r"A^{a b} B_{b c}")
+
+# Replace the second factor node (B_{b c}) at child path "1"
+mutar_nodo_completo(expr, Ex(r"C_{b c}"), path="1")
+print(expr)
+# Output: A^{a b} C_{b c}
+```
+
+### 3. Extracting Free Indices across Nested Operators
+
+Native Cadabra2 index queries inspect top-level expression nodes, but when tensors are wrapped inside nested operators (e.g., nested covariant derivatives), shallow queries do not recursively inspect the internal argument hierarchy. `obtener_indices_libres` recursively traverses operator arguments to recover all free indices and their positions (`super`/`sub`):
+
+```python
+from cadabra2 import Ex
+from scripts import obtener_indices_libres
+
+# Nested covariant derivative acting on a tensor
+expr = Ex(r"\nabla_{\mu}{\nabla_{\nu}{T^{i j k}_{l m}}}")
+
+# Recursively extract free indices through the operator hierarchy
+free_indices = obtener_indices_libres(expr)
+print(free_indices)
+# Output: [('μ', 'sub'), ('ν', 'sub'), ('i', 'super'), ('j', 'super'), ('k', 'super'), ('l', 'sub'), ('m', 'sub')]
 ```
 
 ---
