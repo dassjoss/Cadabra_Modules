@@ -17,7 +17,7 @@ A modular Python toolkit for programmatically manipulating **Cadabra2** expressi
 - **Free Index Resolution**: Extract free vs. contracted (dummy) indices across sums, products, and generic operators (`obtener_indices_libres`), preserving sub-index structure.
 - **AST Node & Index Mutation**: Directly mutate index nodes (`mutar_nodo_indice`) and replace subtrees by tree path (`mutar_nodo_completo`) within Cadabra expression trees.
 - **Metric Contraction & Delta Elimination**: Contract indices across metric tensors ($\eta_{ab}, \eta^{ab}$) and Kronecker deltas ($\delta^a_b$) via `eliminar_metricas`.
-- **Covariant Derivative Expansion**: Expand covariant derivative operators ($\nabla_\mu$, $D_i$) into partial derivatives, Christoffel symbols ($\Gamma^\lambda_{\mu\nu}$), and spin connections ($\omega_\mu{}^a{}_b$) via `d_c_g`.
+- **Covariant Derivative Expansion**: Expand covariant derivative operators ($\nabla_\mu$, $D_i$) into partial derivatives and connection terms using a user-specified connection symbol via `d_c_g`.
 - **Tensor Canonicalization & Symmetries**: Structurally sort product factors (`ordenar_estructura`), handle Schouten identities (`shouten_indices`), and manage tensor symmetries.
 - **Rich Display Formatting**: Render LaTeX tensor expressions cleanly in Jupyter Notebooks using `agrupar_salidas` and `definir_objeto_visual`.
 
@@ -48,7 +48,7 @@ scripts/
 
 ### 1. Expanding Covariant Derivatives
 
-The `d_c_g` module expands gauge covariant derivative operators ($D_i$) acting on multi-indexed tensors into partial derivatives ($\partial_i$) and spin connection terms ($\omega$). For each free Lorentz index on the target tensor, `d_c_g` generates a connection term and automatically selects contracted dummy indices (`c`, `d`) from the supplied Lorentz-index pool:
+The `d_c_g` module expands covariant derivative operators ($D_i$) acting on multi-indexed tensors into partial derivatives ($\partial_i$) and connection terms. The connection symbol is supplied by the user; here, `\omega` is used as an example to represent a spin connection. For each free Lorentz index on the target tensor, `d_c_g` generates a connection term and automatically selects contracted dummy indices (`c`, `d`) from the supplied Lorentz-index pool:
 
 $$
 D_i P^{ab} \longrightarrow \partial_i P^{ab} + \omega_{ic}{}^{a} P^{cb} + \omega_{id}{}^{b} P^{ad}
