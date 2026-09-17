@@ -73,6 +73,29 @@ print(result)
 # \partial_{i}(P^{a b}) + ω_{i c}^{a} P^{c b} + ω_{i d}^{b} P^{a d}
 ```
 
+#### Nested Covariant Derivatives
+
+The `d_c_g` function also recursively expands nested covariant derivatives ($D_i D_j P^{ab}$), expanding both outer and inner derivative operators across all generated connection terms:
+
+$$
+D_i D_j P^{ab} \longrightarrow \partial_{i}(\partial_{j} P^{ab} + \omega_{je}{}^{a} P^{eb} + \omega_{jf}{}^{b} P^{af}) + \omega_{ic}{}^{a} (\partial_{j} P^{cb} + \omega_{jg}{}^{c} P^{gb} + \omega_{jh}{}^{b} P^{ch}) + \omega_{id}{}^{b} (\partial_{j} P^{ad} + \omega_{jk}{}^{a} P^{kd} + \omega_{jl}{}^{d} P^{al})
+$$
+
+Continuing with an extended index pool to accommodate dummy index contractions across all terms:
+
+```python
+# Declare extended Lorentz index pool
+lorentz_indices = ["a", "b", "c", "d", "e", "f", "g", "h", "k", "l"]
+Indices(Ex("a, b, c, d, e, f, g, h, k, l"), Ex("name=lorentz, position=fixed"))
+
+# Expand nested covariant derivatives D_i D_j P^{a b}
+expr_nested = Ex(r"D_{i}{D_{j}{P^{a b}}}")
+result_nested = d_c_g(expr_nested, r"D", r"\omega", lorentz_indices)
+print(result_nested)
+# Output:
+# \partial_{i}((\partial_{j}(P^{a b}) + ω_{j e}^{a} P^{e b} + ω_{j f}^{b} P^{a f})) + ω_{i c}^{a} (\partial_{j}(P^{c b}) + ω_{j g}^{c} P^{g b} + ω_{j h}^{b} P^{c h}) + ω_{i d}^{b} (\partial_{j}(P^{a d}) + ω_{j k}^{a} P^{k d} + ω_{j l}^{d} P^{a l})
+```
+
 ### 2. AST Node Mutation by Path
 
 To modify expressions deterministically without relying on string substitution, `mutar_nodo_completo` navigates the Cadabra AST by child index path and replaces target nodes directly:
