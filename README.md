@@ -46,25 +46,26 @@ scripts/
 
 ## Usage Examples
 
-### 1. Extracting Free Indices
+### 1. Extracting Free Indices across Nested Operators
+
+Native Cadabra2 index queries inspect top-level expression nodes, but when tensors are wrapped inside nested operators (e.g., nested covariant derivatives), shallow queries do not recursively inspect the internal argument hierarchy. `obtener_indices_libres` recursively traverses operator arguments to recover all free indices and their positions (`super`/`sub`):
 
 ```python
-from cadabra2 import Ex, Indices
+from cadabra2 import Ex
 from scripts import obtener_indices_libres
 
-# Declare indices
-Indices(Ex(r"a, b, c, d, \mu, \nu"), Ex(r"name=lorentz"))
+# Nested covariant derivative acting on a tensor
+expr = Ex(r"\nabla_{\mu}{\nabla_{\nu}{T^{i j k}_{l m}}}")
 
-# Expression with free and contracted indices
-expr = Ex(r"A^{a b} B_{b c} + C^{a}_{c}")
-
-# Extract free indices
+# Recursively extract free indices through the operator hierarchy
 free_indices = obtener_indices_libres(expr)
 print(free_indices)
-# Output: [('a', 'super'), ('c', 'sub')]
+# Output: [('μ', 'sub'), ('ν', 'sub'), ('i', 'super'), ('j', 'super'), ('k', 'super'), ('l', 'sub'), ('m', 'sub')]
 ```
 
-### 2. AST Node Mutation
+### 2. AST Node Mutation by Path
+
+To modify expressions deterministically without relying on string substitution, `mutar_nodo_completo` navigates the Cadabra AST by child index path and replaces target nodes directly:
 
 ```python
 from cadabra2 import Ex
@@ -72,13 +73,15 @@ from scripts import mutar_nodo_completo
 
 expr = Ex(r"A^{a b} B_{b c}")
 
-# Replace the second factor node (B_{b c}) in the expression tree
+# Replace the second factor node (B_{b c}) at child path "1"
 mutar_nodo_completo(expr, Ex(r"C_{b c}"), path="1")
 print(expr)
 # Output: A^{a b} C_{b c}
 ```
 
 ### 3. Expanding Covariant Derivatives
+
+The `d_c_g` module expands covariant derivative operators ($\nabla_\mu$, $D_i$) acting on tensor components into partial derivatives and connection terms (Christoffel symbols $\Gamma$ or spin connections $\omega$):
 
 ```python
 from cadabra2 import Ex, Indices
