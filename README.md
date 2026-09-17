@@ -67,6 +67,10 @@ print(free_indices)
 
 To modify expressions deterministically without relying on string substitution, `mutar_nodo_completo` navigates the Cadabra AST by child index path and replaces target nodes directly:
 
+$$
+A^{ab} B_{bc} \longrightarrow A^{ab} C_{bc}
+$$
+
 ```python
 from cadabra2 import Ex
 from scripts import mutar_nodo_completo
