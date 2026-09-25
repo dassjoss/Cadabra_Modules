@@ -13,7 +13,6 @@ __pycache__/
 # Local experimental scratchpad & research notebooks
 scratch/
 Analisis_A_Note/
-cadabra-explorer/
 
 # Standalone experimental notebooks & diagnostic test runners
 diagnostic_test*.ipynb

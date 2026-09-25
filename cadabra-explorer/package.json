@@ -1,0 +1,75 @@
+{
+  "name": "cadabra-explorer",
+  "displayName": "Cadabra Object Explorer",
+  "description": "Explorador de variables Cadabra2",
+  "publisher": "local-publisher",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "cadabraExplorer.refresh",
+        "title": "Refresh",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "cadabraExplorer.inspectVariable",
+        "title": "Inspect Variable"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "cadabra-explorer-container",
+          "title": "Cadabra",
+          "icon": "$(symbol-variable)"
+        }
+      ]
+    },
+    "views": {
+      "cadabra-explorer-container": [
+        {
+          "id": "cadabraExplorerView",
+          "name": "Variables",
+          "type": "tree"
+        },
+        {
+          "id": "cadabraPreviewView",
+          "name": "Preview",
+          "type": "webview"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "cadabraExplorer.refresh",
+          "when": "view == cadabraExplorerView",
+          "group": "navigation"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/node": "16.x",
+    "@types/vscode": "^1.74.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "katex": "^0.18.4"
+  }
+}

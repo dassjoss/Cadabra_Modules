@@ -1,0 +1,9 @@
+.vscode/**
+.vscode-test/**
+src/**/*.ts
+!src/scripts/**
+.gitignore
+tsconfig.json
+**/*.map
+node_modules/**
+!node_modules/katex/dist/**
